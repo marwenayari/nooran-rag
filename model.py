@@ -3,6 +3,22 @@ from ibm_watsonx_ai import Credentials
 from utils import clean_and_normalize_arabic_text, index_document, search_similar_documents, construct_prompt
 import requests
 import os
+from pydantic import BaseModel
+
+class StoryRequest(BaseModel):
+    words: list[str]
+    sentences: list[str]
+
+# Response model
+class StoryResponse(BaseModel):
+    title: str
+    title_en: str
+    brief: str
+    brief_en: str
+    content: list[str]
+    content_en: list[str]
+    min_age: int
+    max_age: int
 
 def get_access_token(api_key):
     url = 'https://iam.cloud.ibm.com/identity/token'
@@ -43,11 +59,9 @@ def initialize_model():
 
 # Main function to generate a story
 def generate_story(words, sentences):
-    # Construct the query and prompt
     query = " ".join(words + sentences)
-    retrieved_contexts = search_similar_documents(query, top_k=2)  # Adjust top_k as needed
+    retrieved_contexts = search_similar_documents(query, top_k=2)
     
-    # Construct the refined system prompt using the retrieved context
     prompt = (
         f"Using the keywords provided, generate a children's story in Arabic based on the retrieved context:\n"
         f"{' '.join(retrieved_contexts)}\n\n"
@@ -72,19 +86,20 @@ def generate_story(words, sentences):
         "Start the story with 'كان يا مكان كان هناك...' and make sure to use the provided keywords."
     )
 
-    # Initialize model and generate the story
     model = initialize_model()
     
     try:
         response = model.generate_text(prompt=prompt)
         if isinstance(response, str):
-            story_text = response
-        elif isinstance(response, dict) and 'text' in response:
-            story_text = response['text']
+            # Here, parse the string response to convert it into a dictionary
+            import json
+            story_data = json.loads(response)  # Assuming the response is JSON formatted
+        elif isinstance(response, dict):
+            story_data = response
         else:
             raise ValueError("Unexpected response structure from the model.")
     except Exception as e:
         raise Exception(f"Error generating text: {str(e)}")
 
-    # The response is expected to be formatted as per the system prompt
-    return story_text  # Directly return the model's output since it's already structured
+    # Ensure the response conforms to the StoryResponse model
+    return StoryResponse(**story_data)  # Create an instance of StoryResponse
