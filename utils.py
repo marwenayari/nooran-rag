@@ -1,10 +1,14 @@
+import sys
 import os
+
 import glob
 import re
 import chromadb
 from chromadb.utils import embedding_functions
 import pypdfium2 as pdfium
 from sentence_transformers import SentenceTransformer
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def extract_text_from_pdf(pdf_path):
     """Extract text from a PDF file using pypdfium2."""

@@ -1,14 +1,23 @@
+import sys
+import os
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from model import setup_watsonx_model, get_watsonx_response
 from utils import setup_chromadb, search_similar_documents, construct_prompt
 
-import os
 from dotenv import load_dotenv
 
-load_dotenv('.env', override=True)
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'), override=True)
 
-app = FastAPI()
+app = FastAPI(
+    title="Nooran X Allam API",
+    description="An API for generating stories using Watsonx AI and ChromaDB",
+    version="1.0.0"
+)
 
 # Setup the IBM Watsonx AI model
 model = setup_watsonx_model()
