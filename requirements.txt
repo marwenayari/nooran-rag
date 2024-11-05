@@ -1,9 +1,8 @@
 fastapi
 uvicorn
-requests
-pypdfium2
-PyPDF2
-chromadb
-sentence-transformers
-python-dotenv
 ibm-watsonx-ai
+python-dotenv
+requests
+sentence-transformers
+chromadb
+pypdfium2

@@ -1,56 +1,32 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from model import generate_story
-from utils import extract_text_from_pdf, clean_and_normalize_arabic_text, index_document
-import os
-import glob
-from dotenv import load_dotenv
-import json  # Import JSON for parsing
+from model import setup_watsonx_model, get_watsonx_response
+from utils import setup_chromadb, search_similar_documents, construct_prompt
 
-# Load environment variables
-load_dotenv()
+import os
 
 app = FastAPI()
 
-# Request model for the API
-class StoryRequest(BaseModel):
-    words: list[str]
-    sentences: list[str]
+# Setup the IBM Watsonx AI model
+model = setup_watsonx_model()
 
-# Response model
-class StoryResponse(BaseModel):
-    title: str
-    title_en: str
-    brief: str
-    brief_en: str
-    content: list[str]
-    content_en: list[str]
-    min_age: int
-    max_age: int
+# Setup ChromaDB collection
+collection_name = os.getenv("CHROMADB_COLLECTION_NAME", "nooran_x_allam")
+persist_directory = os.getenv("CHROMADB_PERSIST_DIR", "./chroma_db")
+collection = setup_chromadb(collection_name, persist_directory)
 
-@app.on_event("startup")
-async def startup_event():
-    """Ingest PDFs and index content on application startup"""
-    pdf_files = glob.glob("pdf_files/*.pdf")  # Adjust path to where your PDFs are stored
-    for i, pdf_file in enumerate(pdf_files):
-        print(f"Processing PDF: {pdf_file}")
-        pdf_text = extract_text_from_pdf(pdf_file)
-        clean_text = clean_and_normalize_arabic_text(pdf_text)
-        index_document(clean_text, f"pdf-{i}")
-    print("All documents indexed successfully.")
+class QueryRequest(BaseModel):
+    query: str
 
-@app.post("/api/story", response_model=StoryResponse)
-async def generate_story_api(request: StoryRequest):
+@app.post("/generate")
+def generate_response(request: QueryRequest):
+    query = request.query
     try:
-        # Call the model function and parse the JSON response
-        story_data = generate_story(request.words, request.sentences)
-
-        # If the response is a string, try to parse it as JSON
-        if isinstance(story_data, str):
-            story_data = json.loads(story_data)
-
-        return StoryResponse(**story_data)  # Ensure it's a valid StoryResponse
-    except json.JSONDecodeError as e:
-        raise HTTPException(status_code=500, detail=f"Invalid JSON response: {str(e)}")
+        similar_docs = search_similar_documents(collection, query)
+        print(f"Similar documents: {similar_docs}")
+        prompt = construct_prompt(query, similar_docs)
+        print(f"Constructed prompt: {prompt}")
+        response = get_watsonx_response(model, prompt)
+        return {"response": response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

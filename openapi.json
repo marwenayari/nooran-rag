@@ -1,0 +1,30 @@
+{
+  "openapi": "3.0.2",
+  "info": { "title": "FastAPI", "version": "0.1.0" },
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Root",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          }
+        }
+      }
+    },
+    "/ping": {
+      "get": {
+        "summary": "Hello",
+        "operationId": "hello_ping_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          }
+        }
+      }
+    }
+  }
+}
