@@ -30,11 +30,11 @@ def get_ibm_token(api_key):
 
 def setup_watsonx_model():
     api_key = os.getenv('IBM_API_KEY')
-    YOUR_ACCESS_TOKEN = get_ibm_token(api_key)
+    ACCESS_TOKEN = get_ibm_token(api_key)
     # Set up the credentials
     credentials = Credentials(
         url="https://eu-de.ml.cloud.ibm.com",
-        token=YOUR_ACCESS_TOKEN
+        token=ACCESS_TOKEN
     )
     
     parameters = {
