@@ -36,15 +36,27 @@ def clean_and_normalize_arabic_text(text):
     cleaned_text = re.sub(r'\s+', ' ', cleaned_text).strip()
     return cleaned_text
 
-def chunk_text(text, chunk_size=300):
+def chunk_text(text, chunk_size=700):
     """Split text into chunks of specified size."""
     return [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
 
 def construct_prompt(query, retrieved_contexts):
+    # Join retrieved contexts
     context = "\n".join(retrieved_contexts)
+    
+    # Extract keywords from the query if applicable
+    keywords = query  # Or use a keyword extraction method if needed
+    
+    # Construct the prompt
     prompt = (
-        f"اجب من السياق التالي : {query}\n\n"
-        f"السياق:\n{context}\n\n"
+        f"أنت كاتب قصص أطفال موهوب.\n"
+        f"باستخدام الكلمات التالية: {keywords},\n"
+        f"وبالاستفادة من السياق التالي:\n{context}\n\n"
+        "اكتب قصة متوسطة الطول ومشوقة للأطفال باللغة العربية.\n"
+        "احرص على أن تكون القصة ذات مغزى وتعليمية، وتشمل الكلمات المذكورة.\n"
+        "استخدم أسلوباً بسيطاً وجذاباً يناسب الأطفال.\n"
+        "اكمل القصة التالية.\n"
+        "كان يامكان في قديم الزمان، كان هناك.\n"
     )
     return prompt
 
@@ -73,7 +85,7 @@ def index_document(collection, text, id):
         )
     print(f"Indexed document {id} in {len(chunks)} chunks.")
 
-def search_similar_documents(collection, query, top_k=2):
+def search_similar_documents(collection, query, top_k=5):
     """Search for similar documents in ChromaDB."""
     results = collection.query(
         query_texts=[query],

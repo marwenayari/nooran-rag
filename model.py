@@ -39,7 +39,7 @@ def setup_watsonx_model():
     
     parameters = {
         "decoding_method": "greedy",
-        "max_new_tokens": 100,
+        "max_new_tokens": 1000,
         "repetition_penalty": 1.0
     }
     
