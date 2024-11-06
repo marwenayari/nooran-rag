@@ -16,3 +16,5 @@ venv.bak/
 
 # Byte-compiled / optimized / DLL files
 *.pyc
+__pycache__/
+chroma_db/
