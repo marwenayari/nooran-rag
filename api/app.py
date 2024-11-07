@@ -7,7 +7,7 @@ from pydantic import BaseModel
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from model import setup_watsonx_model, get_watsonx_response
-from utils import setup_chromadb, search_similar_documents, construct_prompt
+from utils import setup_chromadb, search_similar_documents, construct_prompt, parse_llm_response
 
 from dotenv import load_dotenv
 
@@ -37,6 +37,12 @@ async def generate_response(request: QueryRequest):
         similar_docs = search_similar_documents(collection, query)
         prompt = construct_prompt(query, similar_docs)
         response = get_watsonx_response(model, prompt)
-        return {"response": response}
+        print("Watsonx Response:")
+        print(response)
+        print("Parsing response...")
+        parsed_response = parse_llm_response(response)
+        print("parsed_response:")
+        print(parsed_response)
+        return {"response": parsed_response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

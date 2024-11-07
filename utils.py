@@ -40,25 +40,98 @@ def chunk_text(text, chunk_size=700):
     """Split text into chunks of specified size."""
     return [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
 
-def construct_prompt(query, retrieved_contexts):
+def construct_prompt(keywords, retrieved_contexts, age=6):
     # Join retrieved contexts
     context = "\n".join(retrieved_contexts)
     
-    # Extract keywords from the query if applicable
-    keywords = query  # Or use a keyword extraction method if needed
-    
-    # Construct the prompt
-    prompt = (
-        f"أنت كاتب قصص أطفال موهوب.\n"
-        f"باستخدام الكلمات التالية: {keywords},\n"
-        f"وبالاستفادة من السياق التالي:\n{context}\n\n"
-        "اكتب قصة قصيرة ومشوقة للأطفال باللغة العربية.\n"
-        "احرص على أن تكون القصة ذات مغزى وتعليمية، وتشمل الكلمات المذكورة.\n"
-        "استخدم أسلوباً بسيطاً وجذاباً يناسب الأطفال.\n"
-        "اكمل القصة التالية.\n"
-        "كان يامكان في قديم الزمان، كان هناك.\n"
+    # Construct the system prompt with rules and guidelines
+    system_prompt = (
+        "قم بإنشاء قصة باستخدام مجموعة كلمات تُعطى لك، مع اتباع الأسلوب المُستخدم في الأمثلة التالية. اجعل القصة لطيفة وسهلة وموجهة لحديثي تعلم اللغة العربية. \n"
+        "اريد عنواناً للقصة مع نبذة قصيرة عنها وترجمتها إلى الإنجليزية، كذلك قم بتقييم العمر المناسب للقصة بإعطاء حد أدنى وحد أقصى للعمر.\n"
+        f"{context}\n\n"
+        "**القواعد:**\n"
+        "- لا تقدم أي كلام خارج عن القصة.\n"
+        "- استخدم كلمات لطيفة موجهة للأطفال.\n"
+        "**المدخل:**\n"
+        "كلمات متفرقة تعلمها الطفل حديثا.\n"
+        "عمر الطفل.\n"
+        "**المخرج المتوقع:**\n"
+        "{{\n"
+        '  "title": "title in Arabic",\n'
+        '  "title_en": "Title in English",\n'
+        '  "brief": "Brief in Arabic",\n'
+        '  "brief_en": "Brief in English",\n'
+        '  "content": ["first sentence in Arabic", "second sentence in Arabic", ...],\n'
+        '  "content_en": ["First sentence in English", "Second sentence in English", ...],\n'
+        '  "min_age": min_age,\n'
+        '  "max_age": max_age,\n'
+        "}}\n\n"
+        "مثال للمدخل:\n\n"
+        "باستخدام الكلمات التالية، قم باكمال القصة التالية\n"
+        "كان يامكان، كان هناك\n"
+        "الكلمات: مزرعة، دجاج، أبقار، خرفان، حيوانات\n"
+        f"العمر: {age}\n\n"
+        "لا تكتب أي شيء واي ملاحظة بخلاف المخرج المتوقع، على شكل object.\n"
+        "مثل هذا المخرج يجب أن يكون الناتج النهائي للقصة.\n\n"
+        "المخرج:\n"
+        "{{\n"
+        '  "title": "الدجاجة الذهبية",\n'
+        '  "title_en": "The Golden Chicken Story",\n'
+        '  "brief": "قصة عن مزارع وزوجته يملكان دجاجة ذهبية تضع بيضات ذهبية",\n'
+        '  "brief_en": "A story about a farmer and his wife who own a golden chicken that lays golden eggs",\n'
+        '  "content": ["يُحكى أنّ مزارعاً وزوجته..."],\n'
+        '  "content_en": ["It is said that a farmer and his wife..."],\n'
+        f'  "min_age": 6,\n'
+        f'  "max_age": 10,\n'
+        "}}\n\n"
+        "IMPORTANT: Keep the output result in the same format as the expected output below\n\n"
+        "{{\n"
+        '  "title": "title in Arabic",\n'
+        '  "title_en": "Title in English",\n'
+        '  "brief": "Brief in Arabic",\n'
+        '  "brief_en": "Brief in English",\n'
+        '  "content": ["first sentence in Arabic", "second sentence in Arabic", ...],\n'
+        '  "content_en": ["First sentence in English", "Second sentence in English", ...],\n'
+        '  "min_age": min_age,\n'
+        '  "max_age": max_age,\n'
+        "}}"
     )
+
+    query = ("باستخدام الكلمات التالية، قم باكمال القصة التالية\n"
+        "كان يامكان، كان هناك\n"
+        "الكلمات:" f"{keywords}\n")
+
+    # Construct the final prompt
+
+    prompt = f"<<SYS>>{system_prompt}<<SYS>>[INST]{query}[/INST]"
+
     return prompt
+
+import re
+import json
+
+
+def parse_llm_response(response):
+    # Step 1: Use regex to extract only the JSON part within the first set of braces
+    match = re.search(r"\{\s*\"title\".*?\}\s*", response, re.DOTALL)
+    
+    if match:
+        cleaned_response = match.group(0)  # Extract the JSON portion
+        
+        # Step 2: Remove any trailing commas before a closing brace
+        cleaned_response = re.sub(r",\s*}", "}", cleaned_response)
+        
+        # Attempt to parse the extracted JSON content
+        try:
+            parsed_response = json.loads(cleaned_response)
+        except json.JSONDecodeError as e:
+            print("Error decoding JSON:", e)
+            parsed_response = {}
+    else:
+        print("Error: JSON structure not found.")
+        parsed_response = {}
+    
+    return parsed_response
 
 def setup_chromadb(collection_name="default_collection", persist_directory="./chroma_db"):
     print(f"Setting up ChromaDB... Collection: {collection_name}, Persist Directory: {persist_directory}")
