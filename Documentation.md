@@ -1,6 +1,6 @@
-# README: Arabic Story Generation with IBM Watsonx and ChromaDB
+# Nooran X Allam | Arabic Story Generation with IBM Watsonx and ChromaDB
 
-This README provides a detailed explanation of the Jupyter Notebook titled **"Arabic Story Generation with IBM Watsonx and ChromaDB"**. The notebook demonstrates how to generate Arabic stories using IBM Watsonx language model and ChromaDB for vector storage and retrieval.
+This Documentation file provides a detailed explanation of the Jupyter Notebook titled **"Arabic Story Generation with IBM Watsonx and ChromaDB"**. The notebook demonstrates how to generate Arabic stories using IBM Watsonx language model and ChromaDB for vector storage and retrieval.
 
 ---
 
@@ -708,7 +708,3 @@ pip install requests ibm-watsonx-ai chromadb pypdfium2 sentence-transformers
 ## Conclusion
 
 This notebook provides a comprehensive workflow for generating Arabic stories tailored to young learners. By integrating IBM Watsonx AI and ChromaDB, it demonstrates the power of combining advanced language models with efficient vector search techniques.
-
----
-
-If you encounter any issues or have questions about specific sections, feel free to refer back to this README or consult the documentation for the libraries used.
