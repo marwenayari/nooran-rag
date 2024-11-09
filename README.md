@@ -10,7 +10,7 @@ This is a project to study effectivness of using RAG approach in kids story gene
 
 - Notebook:
   - [File(nooran.ipynb)](nooran.ipynb)
-  - [Full Documentation](DOCUMENTATION.md)
+  - [Full Documentation](Documentation.md)
 - Python file version of the notebook: [nooran.py](nooran.py)
 - FastApi project (root)
   - api
